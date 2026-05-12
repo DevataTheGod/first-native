@@ -1,0 +1,31 @@
+export const colors = {
+  primary: '#FF6B35',
+  primaryDark: '#E55A2B',
+  secondary: '#2D3436',
+  background: '#FFFFFF',
+  surface: '#F8F9FA',
+  card: '#FFFFFF',
+  text: '#2D3436',
+  textSecondary: '#636E72',
+  textMuted: '#B2BEC3',
+  border: '#DFE6E9',
+  error: '#E74C3C',
+  success: '#27AE60',
+  warning: '#F39C12',
+  white: '#FFFFFF',
+  black: '#000000',
+  overlay: 'rgba(0,0,0,0.5)',
+  inputBg: '#F5F6FA',
+};
+
+export const darkColors = {
+  ...colors,
+  primary: '#FF8A5C',
+  background: '#1A1A2E',
+  surface: '#16213E',
+  card: '#0F3460',
+  text: '#FFFFFF',
+  textSecondary: '#B2BEC3',
+  border: '#2D3436',
+  inputBg: '#16213E',
+};
