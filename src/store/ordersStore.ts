@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { Order, OrderStatus } from '../types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { sendOrderUpdateNotification, sendNewOrderNotification } from '../services/notificationService';
 
 interface OrdersStore {
   orders: Order[];
@@ -16,17 +17,19 @@ const ORDER_STATUS_FLOW: OrderStatus[] = ['pending', 'accepted', 'preparing', 'o
 export const useOrdersStore = create<OrdersStore>((set, get) => ({
   orders: [],
   
-  addOrder: (order) => {
+  addOrder: async (order) => {
     set({ orders: [...get().orders, order] });
     AsyncStorage.setItem('orders', JSON.stringify([...get().orders, order]));
+    await sendNewOrderNotification(order.id);
   },
   
-  updateOrderStatus: (orderId, status) => {
+  updateOrderStatus: async (orderId, status) => {
     const updatedOrders = get().orders.map(order =>
       order.id === orderId ? { ...order, status } : order
     );
     set({ orders: updatedOrders });
     AsyncStorage.setItem('orders', JSON.stringify(updatedOrders));
+    await sendOrderUpdateNotification(orderId, status);
   },
   
   getOrdersByUser: (userId) => {
@@ -37,14 +40,14 @@ export const useOrdersStore = create<OrdersStore>((set, get) => ({
     return get().orders.filter(order => order.chefId === chefId);
   },
 
-  simulateOrderProgress: (orderId) => {
+  simulateOrderProgress: async (orderId) => {
     const order = get().orders.find(o => o.id === orderId);
     if (!order) return;
     
     const currentIndex = ORDER_STATUS_FLOW.indexOf(order.status);
     if (currentIndex < ORDER_STATUS_FLOW.length - 1) {
       const nextStatus = ORDER_STATUS_FLOW[currentIndex + 1];
-      get().updateOrderStatus(orderId, nextStatus);
+      await get().updateOrderStatus(orderId, nextStatus);
     }
   },
 }));
