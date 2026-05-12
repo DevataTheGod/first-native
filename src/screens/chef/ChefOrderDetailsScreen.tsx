@@ -8,14 +8,36 @@ import { Button } from '../../components/ui';
 import { useOrdersStore } from '../../store';
 
 export const ChefOrderDetailsScreen: React.FC = () => {
-  const route = useRoute<any>();
+  const route = useRoute<RouteProp<any, 'OrderDetails'>>();
   const navigation = useNavigation<any>();
-  const { orders, updateOrderStatus } = useOrdersStore();
+  const { orders, updateOrderStatus, simulateOrderProgress } = useOrdersStore();
   const order = orders.find((o: any) => o.id === route.params?.orderId);
 
   if (!order) {
     return <SafeAreaView style={styles.container}><Text style={styles.errorText}>Order not found</Text></SafeAreaView>;
   }
+
+  const handleAccept = () => {
+    updateOrderStatus(order.id, 'accepted');
+  };
+
+  const handleReject = () => {
+    updateOrderStatus(order.id, 'cancelled');
+    navigation.goBack();
+  };
+
+  const handleStartPreparing = () => {
+    updateOrderStatus(order.id, 'preparing');
+  };
+
+  const handleStartChat = () => {
+    navigation.navigate('ClientCommunication', { orderId: order.id });
+  };
+
+  const handleHandOff = () => {
+    simulateOrderProgress(order.id);
+    navigation.navigate('TrackDelivery', { orderId: order.id });
+  };
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -31,9 +53,23 @@ export const ChefOrderDetailsScreen: React.FC = () => {
         <View style={styles.totalSection}><View style={styles.totalRow}><Text style={styles.totalLabel}>Total</Text><Text style={styles.totalValue}>${order.total.toFixed(2)}</Text></View></View>
       </ScrollView>
       <View style={styles.footer}>
-        {order.status === 'pending' && <View style={styles.actionRow}><Button title="Reject" variant="outline" onPress={() => updateOrderStatus(order.id, 'cancelled')} style={styles.rejectBtn} /><Button title="Accept" onPress={() => updateOrderStatus(order.id, 'accepted')} style={styles.acceptBtn} /></View>}
-        {order.status === 'accepted' && <Button title="Start Preparing" onPress={() => updateOrderStatus(order.id, 'preparing')} style={styles.button} />}
-        {order.status === 'preparing' && <Button title="Hand Off to Delivery" onPress={() => navigation.navigate('Chef', { screen: 'TrackDelivery', params: { orderId: order.id } })} style={styles.button} />}
+        {order.status === 'pending' && (
+          <View style={styles.actionRow}>
+            <Button title="Reject" variant="outline" onPress={handleReject} style={styles.rejectBtn} />
+            <Button title="Accept" onPress={handleAccept} style={styles.acceptBtn} />
+          </View>
+        )}
+        {order.status === 'accepted' && <Button title="Start Preparing" onPress={handleStartPreparing} style={styles.button} />}
+        {order.status === 'preparing' && (
+          <View style={styles.actionRow}>
+            <Button title="Chat with Client" onPress={handleStartChat} style={styles.halfButton} />
+            <Button title="Hand Off" onPress={handleHandOff} style={styles.halfButton} />
+          </View>
+        )}
+        {order.status === 'out_for_delivery' && (
+          <Button title="Track Delivery" onPress={() => navigation.navigate('TrackDelivery', { orderId: order.id })} style={styles.button} />
+        )}
+        {order.status === 'delivered' && <Text style={styles.deliveredText}>Order completed!</Text>}
       </View>
     </SafeAreaView>
   );
@@ -65,4 +101,6 @@ const styles = StyleSheet.create({
   rejectBtn: { flex: 1 },
   acceptBtn: { flex: 1 },
   button: { width: '100%' },
+  halfButton: { flex: 1, marginRight: spacing.sm },
+  deliveredText: { ...typography.body, color: colors.success, textAlign: 'center' },
 });

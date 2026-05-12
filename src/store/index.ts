@@ -3,3 +3,4 @@ export { useCartStore } from './cartStore';
 export { useFavoritesStore } from './favoritesStore';
 export { useMealsStore } from './mealsStore';
 export { useOrdersStore } from './ordersStore';
+export { useChatStore } from './chatStore';

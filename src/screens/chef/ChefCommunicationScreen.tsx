@@ -1,36 +1,29 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput } from 'react-native';
+import React, { useState, useRef, useEffect } from 'react';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
 import { useRoute, RouteProp, useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, typography, spacing, borderRadius } from '../../theme';
+import { useChatStore } from '../../store/chatStore';
 import { ChefStackParamList } from '../../navigation/types';
-
-interface Message {
-  id: string;
-  text: string;
-  sender: 'chef' | 'user';
-  time: string;
-}
 
 export const ChefCommunicationScreen: React.FC = () => {
   const route = useRoute<RouteProp<ChefStackParamList, 'ClientCommunication'>>();
   const navigation = useNavigation();
-  const [messages, setMessages] = useState<Message[]>([
-    { id: '1', text: 'Hello! I placed an order for the carbonara.', sender: 'user', time: '10:30 AM' },
-    { id: '2', text: 'Great! I will start preparing it now.', sender: 'chef', time: '10:32 AM' },
-  ]);
-  const [newMessage, setNewMessage] = useState('');
+  const { messages, addMessage, getMessages } = useChatStore();
+  const [text, setText] = useState('');
+  const flatListRef = useRef<FlatList>(null);
+  const orderMessages = getMessages(route.params?.orderId || '');
 
-  const sendMessage = () => {
-    if (!newMessage.trim()) return;
-    setMessages([...messages, {
-      id: Date.now().toString(),
-      text: newMessage,
-      sender: 'chef',
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-    }]);
-    setNewMessage('');
+  const handleSend = () => {
+    if (!text.trim()) return;
+    addMessage(route.params?.orderId || '', {
+      orderId: route.params?.orderId || '',
+      senderId: 'chef-1',
+      senderType: 'chef',
+      text: text.trim(),
+    });
+    setText('');
   };
 
   return (
@@ -40,91 +33,49 @@ export const ChefCommunicationScreen: React.FC = () => {
           <Ionicons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
         <Text style={styles.title}>Chat with Client</Text>
-        <TouchableOpacity>
-          <Ionicons name="call-outline" size={24} color={colors.text} />
-        </TouchableOpacity>
+        <Ionicons name="call-outline" size={24} color={colors.text} />
       </View>
       <FlatList
-        data={messages}
+        ref={flatListRef}
+        data={orderMessages}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.messagesList}
+        onContentSizeChange={() => flatListRef.current?.scrollToEnd()}
         renderItem={({ item }) => (
-          <View style={[styles.messageBubble, item.sender === 'chef' ? styles.chefBubble : styles.userBubble]}>
-            <Text style={[styles.messageText, item.sender === 'chef' ? styles.chefText : styles.userText]}>
-              {item.text}
-            </Text>
-            <Text style={[styles.messageTime, item.sender === 'chef' ? styles.chefTime : styles.userTime]}>
-              {item.time}
-            </Text>
+          <View style={[styles.bubble, item.senderType === 'chef' ? styles.chefBubble : styles.userBubble]}>
+            <Text style={[styles.bubbleText, item.senderType === 'chef' ? styles.chefText : styles.userText]}>{item.text}</Text>
+            <Text style={[styles.timeText, item.senderType === 'chef' ? styles.chefTime : styles.userTime]}>{new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</Text>
           </View>
         )}
       />
-      <View style={styles.inputContainer}>
-        <TextInput
-          style={styles.input}
-          placeholder="Type a message..."
-          value={newMessage}
-          onChangeText={setNewMessage}
-          placeholderTextColor={colors.textMuted}
-        />
-        <TouchableOpacity style={styles.sendBtn} onPress={sendMessage}>
-          <Ionicons name="send" size={24} color={colors.white} />
-        </TouchableOpacity>
-      </View>
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+        <View style={styles.inputContainer}>
+          <TextInput style={styles.input} placeholder="Type a message..." value={text} onChangeText={setText} placeholderTextColor={colors.textMuted} multiline />
+          <TouchableOpacity style={[styles.sendBtn, !text.trim() && styles.sendBtnDisabled]} onPress={handleSend} disabled={!text.trim()}>
+            <Ionicons name="send" size={20} color={colors.white} />
+          </TouchableOpacity>
+        </View>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing.lg, paddingVertical: spacing.md, borderBottomWidth: 1, borderBottomColor: colors.border },
   title: { ...typography.h3, color: colors.text },
-  messagesList: { padding: spacing.lg },
-  messageBubble: {
-    maxWidth: '80%',
-    padding: spacing.md,
-    borderRadius: borderRadius.md,
-    marginBottom: spacing.md,
-  },
+  messagesList: { padding: spacing.lg, flexGrow: 1 },
+  bubble: { maxWidth: '80%', padding: spacing.md, borderRadius: borderRadius.md, marginBottom: spacing.md },
   chefBubble: { alignSelf: 'flex-end', backgroundColor: colors.primary },
   userBubble: { alignSelf: 'flex-start', backgroundColor: colors.card },
-  messageText: { ...typography.body, marginBottom: spacing.xs },
+  bubbleText: { ...typography.body },
   chefText: { color: colors.white },
   userText: { color: colors.text },
-  messageTime: { ...typography.caption, textAlign: 'right' },
+  timeText: { ...typography.caption, marginTop: spacing.xs, textAlign: 'right' },
   chefTime: { color: 'rgba(255,255,255,0.7)' },
   userTime: { color: colors.textMuted },
-  inputContainer: {
-    flexDirection: 'row',
-    padding: spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-    backgroundColor: colors.card,
-  },
-  input: {
-    flex: 1,
-    ...typography.body,
-    color: colors.text,
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.full,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    marginRight: spacing.sm,
-  },
-  sendBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  inputContainer: { flexDirection: 'row', padding: spacing.md, backgroundColor: colors.card, borderTopWidth: 1, borderTopColor: colors.border, alignItems: 'flex-end' },
+  input: { flex: 1, ...typography.body, color: colors.text, backgroundColor: colors.surface, borderRadius: borderRadius.full, paddingHorizontal: spacing.md, paddingVertical: spacing.sm, maxHeight: 100 },
+  sendBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center', marginLeft: spacing.sm },
+  sendBtnDisabled: { backgroundColor: colors.textMuted },
 });

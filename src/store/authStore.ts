@@ -12,6 +12,7 @@ interface AuthStore {
   setOnboarded: (value: boolean) => void;
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
+  hydrate: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthStore>((set, get) => ({
@@ -36,23 +37,46 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
   login: async (email: string, password: string) => {
     await new Promise(resolve => setTimeout(resolve, 1000));
     if (email && password.length >= 6) {
+      const user = { email, name: email.split('@')[0] };
       set({
         isAuthenticated: true,
-        user: { email, name: email.split('@')[0] },
+        user,
         token: 'mock_token_' + Date.now(),
       });
+      await AsyncStorage.setItem('authUser', JSON.stringify(user));
       return true;
     }
     return false;
   },
   
-  logout: () => {
+  logout: async () => {
     set({
       isAuthenticated: false,
       user: null,
       token: null,
     });
-    AsyncStorage.removeItem('userRole');
-    AsyncStorage.removeItem('isOnboarded');
+    await Promise.all([
+      AsyncStorage.removeItem('userRole'),
+      AsyncStorage.removeItem('isOnboarded'),
+      AsyncStorage.removeItem('authUser'),
+    ]);
+  },
+
+  hydrate: async () => {
+    try {
+      const [isOnboarded, userRole, authUser] = await Promise.all([
+        AsyncStorage.getItem('isOnboarded'),
+        AsyncStorage.getItem('userRole'),
+        AsyncStorage.getItem('authUser'),
+      ]);
+      set({
+        isOnboarded: isOnboarded ? JSON.parse(isOnboarded) : false,
+        role: userRole as 'user' | 'chef' | null,
+        user: authUser ? JSON.parse(authUser) : null,
+        isAuthenticated: !!authUser,
+      });
+    } catch (e) {
+      console.log('Failed to hydrate auth state', e);
+    }
   },
 }));

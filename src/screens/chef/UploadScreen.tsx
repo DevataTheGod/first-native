@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import React, { useState } from 'react';
+import { View, StyleSheet, TouchableOpacity, Image, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -7,32 +7,56 @@ import * as ImagePicker from 'expo-image-picker';
 import { colors, typography, spacing, borderRadius } from '../../theme';
 import { Button } from '../../components/ui';
 
-export const MedicalCertificateUploadScreen: React.FC = () => {
+interface UploadScreenProps {
+  title: string;
+  subtitle: string;
+  step: number;
+  totalSteps: number;
+  nextScreen: string;
+  icon: keyof typeof Ionicons.glyphMap;
+}
+
+export const UploadScreen: React.FC<UploadScreenProps> = ({
+  title,
+  subtitle,
+  step,
+  totalSteps,
+  nextScreen,
+  icon,
+}) => {
   const navigation = useNavigation<any>();
-  const [image, setImage] = React.useState<string | null>(null);
+  const [image, setImage] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') return;
+    if (status !== 'granted') {
+      Alert.alert('Permission needed', 'Please allow access to your photo library');
+      return;
+    }
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
+      aspect: [4, 3],
       quality: 0.8,
     });
-    if (!result.canceled) setImage(result.assets[0].uri);
+    if (!result.canceled) {
+      setImage(result.assets[0].uri);
+    }
+  };
+
+  const handleContinue = () => {
+    navigation.navigate(nextScreen);
   };
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color={colors.text} />
-        </TouchableOpacity>
-        <Text style={styles.titleText}>Medical Certificate</Text>
-        <Text style={styles.subtitle}>Step 4 of 4</Text>
+        <Text style={styles.title}>{title}</Text>
+        <Text style={styles.subtitle}>Step {step} of {totalSteps}</Text>
       </View>
       <View style={styles.progressBar}>
-        <View style={[styles.progress, { width: '100%' }]} />
+        <View style={[styles.progress, { width: `${(step / totalSteps) * 100}%` }]} />
       </View>
       <View style={styles.content}>
         <TouchableOpacity style={styles.uploadArea} onPress={pickImage}>
@@ -40,8 +64,8 @@ export const MedicalCertificateUploadScreen: React.FC = () => {
             <Image source={{ uri: image }} style={styles.previewImage} />
           ) : (
             <>
-              <Ionicons name="medical-outline" size={60} color={colors.primary} />
-              <Text style={styles.uploadText}>Tap to upload certificate</Text>
+              <Ionicons name={icon} size={60} color={colors.primary} />
+              <Text style={styles.uploadText}>Tap to upload</Text>
             </>
           )}
         </TouchableOpacity>
@@ -49,18 +73,19 @@ export const MedicalCertificateUploadScreen: React.FC = () => {
           <Text style={styles.requirementsTitle}>Requirements:</Text>
           <View style={styles.requirementItem}>
             <Ionicons name="checkmark-circle" size={20} color={colors.success} />
-            <Text style={styles.requirementText}>Valid health certificate</Text>
+            <Text style={styles.requirementText}>Clear, readable document</Text>
           </View>
           <View style={styles.requirementItem}>
             <Ionicons name="checkmark-circle" size={20} color={colors.success} />
-            <Text style={styles.requirementText}>Food handler certification preferred</Text>
+            <Text style={styles.requirementText}>Not expired</Text>
           </View>
         </View>
       </View>
       <View style={styles.footer}>
         <Button
-          title={image ? 'Complete Registration' : 'Skip for Now'}
-          onPress={() => navigation.reset({ index: 0, routes: [{ name: 'Chef' }] })}
+          title={image ? 'Continue' : 'Skip for Now'}
+          onPress={handleContinue}
+          loading={loading}
           style={styles.button}
         />
       </View>
@@ -68,10 +93,12 @@ export const MedicalCertificateUploadScreen: React.FC = () => {
   );
 };
 
+import { Text } from 'react-native';
+
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
-  header: { paddingHorizontal: spacing.lg, paddingVertical: spacing.md, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  titleText: { ...typography.h3, color: colors.text },
+  header: { paddingHorizontal: spacing.lg, paddingVertical: spacing.md },
+  title: { ...typography.h2, color: colors.text },
   subtitle: { ...typography.body, color: colors.textSecondary },
   progressBar: { height: 4, backgroundColor: colors.border, marginHorizontal: spacing.lg },
   progress: { height: '100%', backgroundColor: colors.primary },
