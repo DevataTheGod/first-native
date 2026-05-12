@@ -7,3 +7,5 @@ export { CartScreen } from './CartScreen';
 export { CheckoutScreen } from './CheckoutScreen';
 export { OrderTrackingScreen } from './OrderTrackingScreen';
 export { ProfileScreen } from './ProfileScreen';
+export { UserChatScreen } from './UserChatScreen';
+export { OrderHistoryScreen } from './OrderHistoryScreen';

@@ -6,6 +6,7 @@ export { ChefOrderDetailsScreen } from './ChefOrderDetailsScreen';
 export { ChefCommunicationScreen } from './ChefCommunicationScreen';
 export { ChefTrackDeliveryScreen } from './ChefTrackDeliveryScreen';
 export { ChefRatingsScreen } from './ChefRatingsScreen';
+export { ChefSettingsScreen } from './ChefSettingsScreen';
 export { PersonalPhotoUploadScreen } from './PersonalPhotoUploadScreen';
 export { PoliceClearanceUploadScreen } from './PoliceClearanceUploadScreen';
 export { IDUploadScreen } from './IDUploadScreen';

@@ -11,6 +11,8 @@ import { MealDetailsScreen } from '../screens/user/MealDetailsScreen';
 import { FavoritesScreen } from '../screens/user/FavoritesScreen';
 import { CheckoutScreen } from '../screens/user/CheckoutScreen';
 import { OrderTrackingScreen } from '../screens/user/OrderTrackingScreen';
+import { UserChatScreen } from '../screens/user/UserChatScreen';
+import { OrderHistoryScreen } from '../screens/user/OrderHistoryScreen';
 import { colors } from '../theme';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -61,6 +63,8 @@ export const UserNavigator: React.FC = () => {
       <UserStack.Screen name="Favorites" component={FavoritesScreen} />
       <UserStack.Screen name="Checkout" component={CheckoutScreen} />
       <UserStack.Screen name="OrderTracking" component={OrderTrackingScreen} />
+      <UserStack.Screen name="Chat" component={UserChatScreen} />
+      <UserStack.Screen name="OrderHistory" component={OrderHistoryScreen} />
     </UserStack.Navigator>
   );
 };

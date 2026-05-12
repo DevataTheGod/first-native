@@ -10,6 +10,7 @@ import { ChefOrderDetailsScreen } from '../screens/chef/ChefOrderDetailsScreen';
 import { ChefCommunicationScreen } from '../screens/chef/ChefCommunicationScreen';
 import { ChefTrackDeliveryScreen } from '../screens/chef/ChefTrackDeliveryScreen';
 import { ChefRatingsScreen } from '../screens/chef/ChefRatingsScreen';
+import { ChefSettingsScreen } from '../screens/chef/ChefSettingsScreen';
 import { colors } from '../theme';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -57,6 +58,7 @@ export const ChefNavigator: React.FC = () => {
       <Stack.Screen name="ClientCommunication" component={ChefCommunicationScreen} />
       <Stack.Screen name="TrackDelivery" component={ChefTrackDeliveryScreen} />
       <Stack.Screen name="Ratings" component={ChefRatingsScreen} />
+      <Stack.Screen name="Settings" component={ChefSettingsScreen} />
     </Stack.Navigator>
   );
 };

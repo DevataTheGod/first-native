@@ -19,22 +19,23 @@ export type UserTabParamList = {
 };
 
 export type UserStackParamList = {
-  UserTabs: undefined;
+  UserTabs: NavigatorScreenParams<UserTabParamList>;
   MealDetails: { mealId: string };
   Favorites: undefined;
   Checkout: undefined;
   OrderTracking: { orderId: string };
+  Chat: { orderId: string };
+  OrderHistory: undefined;
 };
 
 export type ChefStackParamList = {
-  ChefDashboard: undefined;
-  CompleteProfile: undefined;
+  ChefDashboard: NavigatorScreenParams<any>;
   AddMeal: undefined;
-  Orders: undefined;
   OrderDetails: { orderId: string };
   ClientCommunication: { orderId: string };
   TrackDelivery: { orderId: string };
   Ratings: undefined;
+  Settings: undefined;
 };
 
 export type ChefDocumentStackParamList = {
